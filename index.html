@@ -66,7 +66,64 @@
     document.addEventListener('DOMContentLoaded', toggleInputs);
 
     function simulate() {
-      alert("Simulation is running... (placeholder for kinetics model)");
+      const totalTime = parseFloat(document.getElementById('totalTime').value);
+      const tk = parseFloat(document.getElementById('tkConc').value);
+      const ta = parseFloat(document.getElementById('taConc').value);
+      const mba = parseFloat(document.getElementById('mba').value);
+
+      const kmHPA = 10, kmGA = 10, kmERY = 10, kmMBA = 10;
+      const vmax1 = 0.2 * tk;
+      const vmax2 = 0.2 * ta;
+
+      let hpa = 100, ga = 100, ery = 0, abt = 0;
+      let mbaNow = mba;
+
+      const time = [], hpaData = [], gaData = [], eryData = [], abtData = [];
+
+      for (let t = 0; t <= totalTime; t += 1) {
+        const rate1 = vmax1 * hpa * ga / ((kmHPA + hpa) * (kmGA + ga));
+        const rate2 = vmax2 * ery * mbaNow / ((kmERY + ery) * (kmMBA + mbaNow));
+
+        hpa -= rate1;
+        ga -= rate1;
+        ery += rate1 - rate2;
+        mbaNow -= rate2;
+        abt += rate2;
+
+        if (hpa < 0) hpa = 0;
+        if (ga < 0) ga = 0;
+        if (mbaNow < 0) mbaNow = 0;
+
+        time.push(t);
+        hpaData.push(hpa);
+        gaData.push(ga);
+        eryData.push(ery);
+        abtData.push(abt);
+      }
+
+      new Chart(document.getElementById("substrateChart"), {
+        type: 'line',
+        data: {
+          labels: time,
+          datasets: [
+            { label: 'HPA', data: hpaData, borderColor: 'orange', fill: false },
+            { label: 'GA', data: gaData, borderColor: 'red', fill: false },
+            { label: 'ERY', data: eryData, borderColor: 'blue', fill: false },
+          ]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'top' } } }
+      });
+
+      new Chart(document.getElementById("abtChart"), {
+        type: 'line',
+        data: {
+          labels: time,
+          datasets: [
+            { label: 'ABT', data: abtData, borderColor: 'green', fill: false },
+          ]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'top' } } }
+      });
     }
   </script>
 </body>
